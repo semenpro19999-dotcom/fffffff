@@ -81,7 +81,7 @@ public final class EditExecutor {
 
 		try {
 			before = RegionSnapshot.capture(world, min, max);
-		} catch (IllegalStateException | RuntimeException e) {
+		} catch (RuntimeException e) {
 			WorldStudioMod.LOGGER.warn("[WorldStudio] capture failed", e);
 			session.message(player, Text.translatable("worldstudio.error.capture_failed"));
 			return;
@@ -230,7 +230,7 @@ public final class EditExecutor {
 
 		try {
 			opposite = RegionSnapshot.capture(world, entry.min(), entry.max());
-		} catch (IllegalStateException | RuntimeException e) {
+		} catch (RuntimeException e) {
 			WorldStudioMod.LOGGER.warn("[WorldStudio] history capture failed", e);
 			session.message(player, Text.translatable("worldstudio.error.capture_failed"));
 			session.syncTo(player);
@@ -288,7 +288,7 @@ public final class EditExecutor {
 		try {
 			snapshot = RegionSnapshot.readStructureNbt(raw.getCompound("region"), lookup, world.getRegistryKey(),
 					BlockPos.ORIGIN);
-		} catch (IllegalArgumentException | RuntimeException e) {
+		} catch (RuntimeException e) {
 			WorldStudioMod.LOGGER.warn("[WorldStudio] could not parse schematic '{}'", name, e);
 			session.message(player, Text.translatable("worldstudio.error.corrupt", name));
 			session.syncTo(player);

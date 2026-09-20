@@ -57,7 +57,7 @@ jobs:
             echo "--- task failures ---"
             grep -nE "Caused by|Execution failed for task|> Task .* FAILED|Could not (resolve|find|download)" build.log | head -25
             echo "--- tail ---"
-            tail -n 30 build.log
+            tail -n 10 build.log
           } > report.txt 2>&1
           BODY=$(head -c 50000 report.txt)
           printf '%s\n%s\n%s\n%s\n' "build ${RUN} (${SHA7}) exit=${GRADLE_EXIT:-?}" "${FENCE}" "${BODY}" "${FENCE}" > body.md
