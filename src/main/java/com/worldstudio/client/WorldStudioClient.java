@@ -3,7 +3,7 @@ package com.worldstudio.client;
 import com.worldstudio.client.net.ClientNetworking;
 import com.worldstudio.client.render.SelectionRenderer;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class WorldStudioClient implements ClientModInitializer {
