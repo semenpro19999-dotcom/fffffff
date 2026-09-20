@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "worldstudio",
+	"version": "${version}",
+	"name": "World Studio",
+	"description": "In-game creative world editor inspired by Roblox Studio. Select a region with the Studio Wand, then fill, replace, hollow, outline or clear it from a graphical panel with a searchable block palette. Copy structures to a clipboard, rotate them in 90 degree steps, paste with a live preview, undo/redo any edit, and save or load builds from a schematic library stored in your world folder.",
+	"authors": [
+		"semenpro19999"
+	],
+	"contact": {
+		"sources": "https://github.com/semenpro19999-dotcom/fffffff"
+	},
+	"license": "MIT",
+	"icon": "assets/worldstudio/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.worldstudio.WorldStudioMod"
+		],
+		"client": [
+			"com.worldstudio.client.WorldStudioClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}
