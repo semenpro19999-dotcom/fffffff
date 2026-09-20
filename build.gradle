@@ -14,13 +14,6 @@ repositories {
 	// Loom adds the essential repositories (Minecraft libraries, Fabric maven) automatically.
 }
 
-loom {
-	// Runs are created for client and server; `./gradlew runClient` launches the game with the mod.
-	runConfigs.configureEach {
-		runDir = 'run'
-	}
-}
-
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

@@ -50,10 +50,14 @@ jobs:
             echo "run ${RUN} (${SHA7}) exit=${GRADLE_EXIT:-unknown}"
             echo "--- build/libs ---"
             ls -la build/libs/ 2>/dev/null || echo "(none)"
-            echo "--- errors/warnings ---"
-            grep -nE "error:|warning:|FAILURE|What went wrong|Caused by|Could not|Execution failed|> Task .* FAILED" build.log | head -60
+            echo "--- what went wrong ---"
+            sed -n '/What went wrong/,/^\* Try/p' build.log | head -40
+            echo "--- compile errors ---"
+            grep -nE "error:|warning: \[" build.log | head -50
+            echo "--- task failures ---"
+            grep -nE "Caused by|Execution failed for task|> Task .* FAILED|Could not (resolve|find|download)" build.log | head -25
             echo "--- tail ---"
-            tail -n 120 build.log
+            tail -n 30 build.log
           } > report.txt 2>&1
           BODY=$(head -c 50000 report.txt)
           printf '%s\n%s\n%s\n%s\n' "build ${RUN} (${SHA7}) exit=${GRADLE_EXIT:-?}" "${FENCE}" "${BODY}" "${FENCE}" > body.md
