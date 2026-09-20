@@ -1,0 +1,25 @@
+name: CI probe
+
+on:
+  push:
+    branches: [ "arena/01a0be3e-fffffff" ]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Probe environment
+        run: |
+          java -version
+          echo "--- maven central ---"
+          curl -s -o /dev/null -w "%{http_code}\n" https://repo1.maven.org/maven2/
+          echo "--- fabric maven ---"
+          curl -s -o /dev/null -w "%{http_code}\n" https://maven.fabricmc.net/
+          echo "--- gradle services ---"
+          curl -s -o /dev/null -w "%{http_code}\n" https://services.gradle.org/distributions/
