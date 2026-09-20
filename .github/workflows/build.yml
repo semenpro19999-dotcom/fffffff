@@ -34,7 +34,7 @@ jobs:
       - name: build
         run: |
           set -o pipefail
-          ./gradlew build --no-daemon --stacktrace --info 2>&1 | tee build.log || true
+          ./gradlew build --no-daemon --stacktrace 2>&1 | tee build.log || true
           echo "GRADLE_EXIT=${PIPESTATUS[0]}" >> "$GITHUB_ENV"
           ls -la build/libs/ 2>/dev/null || echo "no build/libs"
 
@@ -71,3 +71,77 @@ jobs:
           name: worldstudio-jars
           path: build/libs/
           if-no-files-found: ignore
+
+  smoke-server:
+    name: dedicated server smoke test
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: accept eula and prepare run dir
+        run: |
+          mkdir -p run
+          echo "eula=true" > run/eula.txt
+          cat > run/server.properties <<'PROPS'
+          online-mode=false
+          level-type=minecraft\:flat
+          spawn-protection=0
+          max-tick-time=-1
+          view-distance=4
+          PROPS
+
+      - name: start dedicated server with the mod
+        run: |
+          ./gradlew runServer --no-daemon > server.log 2>&1 < /dev/null &
+          GPID=$!
+          echo "$GPID" > server.pid
+          STARTED="no"
+          CRASHED="no"
+          for i in $(seq 1 100); do
+            sleep 4
+            if grep -q "Done (" server.log 2>/dev/null; then STARTED="yes"; break; fi
+            if grep -qE "Failed to start the minecraft server|A crash report has been saved|EntrypointException|Exception in thread|Mod resolution encountered|This crash report has been saved" server.log 2>/dev/null; then CRASHED="yes"; break; fi
+            if ! kill -0 "$GPID" 2>/dev/null; then break; fi
+          done
+          echo "STARTED=$STARTED CRASHED=$CRASHED"
+          echo "STARTED=$STARTED" >> "$GITHUB_ENV"
+          echo "CRASHED=$CRASHED" >> "$GITHUB_ENV"
+          kill "$GPID" 2>/dev/null || true
+          pkill -f "KnotServer" 2>/dev/null || true
+          pkill -f "GradleWrapperMain" 2>/dev/null || true
+          sleep 3
+          pkill -9 -f "KnotServer" 2>/dev/null || true
+          pkill -9 -f "GradleWrapperMain" 2>/dev/null || true
+          exit 0
+
+      - name: report smoke result
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FENCE='```'
+          RUN="${{ github.run_id }}"
+          {
+            echo "smoke run ${RUN}: started=${STARTED:-?} crashed=${CRASHED:-?}"
+            echo "--- worldstudio lines ---"
+            grep -n "WorldStudio" server.log | head -20
+            echo "--- errors ---"
+            grep -nE "ERROR|Exception|Failed|crash" server.log | head -30
+            echo "--- startup tail ---"
+            grep -nE "\[Server thread|Done \(|Starting minecraft server|Preparing|WorldStudio" server.log | tail -25
+          } > smoke.txt 2>&1
+          BODY=$(head -c 40000 smoke.txt)
+          printf '%s\n%s\n%s\n%s\n' "smoke ${RUN} started=${STARTED:-?} crashed=${CRASHED:-?}" "${FENCE}" "${BODY}" "${FENCE}" > body.md
+          gh api "repos/${{ github.repository }}/issues/1/comments" -f body="$(cat body.md)" > /dev/null
+          echo "smoke comment posted"

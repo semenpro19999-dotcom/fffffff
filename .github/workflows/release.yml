@@ -1,0 +1,35 @@
+name: release
+
+on:
+  push:
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: build
+        run: ./gradlew build --no-daemon
+
+      - name: create github release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" build/libs/*.jar \
+            --title "World Studio ${GITHUB_REF_NAME}" \
+            --notes "Мод для Minecraft 1.20.1 (Fabric). Требуется Fabric Loader и Fabric API. Положите jar в папку mods."
