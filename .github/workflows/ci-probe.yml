@@ -25,7 +25,7 @@ jobs:
           {
             echo "### java"
             java -version 2>&1
-            echo "### JAVA_HOME=$JAVA_HOME"
+            echo "### JAVA_HOME=${JAVA_HOME}"
             echo "### maven central"
             curl -s -o /dev/null -w "%{http_code}\n" https://repo1.maven.org/maven2/
             echo "### fabric maven"
@@ -34,12 +34,10 @@ jobs:
             curl -s -o /dev/null -w "%{http_code}\n" https://services.gradle.org/distributions/
             echo "### minecraft libraries"
             curl -s -o /dev/null -w "%{http_code}\n" https://libraries.minecraft.net/
-            echo "### neoforged maven"
-            curl -s -o /dev/null -w "%{http_code}\n" https://maven.neoforged.net/releases/
-            echo "### modrinth maven"
+            echo "### mojang piston meta"
+            curl -s -o /dev/null -w "%{http_code}\n" https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
+            echo "### modrinth api"
             curl -s -o /dev/null -w "%{http_code}\n" https://api.modrinth.com/maven/
-            echo "### gradle wrapper cached on runner?"
-            ls ~/.gradle 2>/dev/null || echo "no ~/.gradle"
             echo "### done"
           } > probe.txt 2>&1
           cat probe.txt
@@ -48,12 +46,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BODY=$(head -c 55000 probe.txt)
+          BODY=$(head -c 50000 probe.txt)
           FENCE='```'
           SHA7="${GITHUB_SHA:0:7}"
-          gh api "repos/${{ github.repository }}/issues/1/comments" \
-            -f body="probe run ${{ github.run_id }} (${SHA7})
-
-${FENCE}
-${BODY}
-${FENCE}" > /dev/null && echo "comment posted"
+          RUN="${{ github.run_id }}"
+          printf '%s\n%s\n%s\n%s\n' "probe run ${RUN} (${SHA7})" "${FENCE}" "${BODY}" "${FENCE}" > body.md
+          gh api "repos/${{ github.repository }}/issues/1/comments" -f body="$(cat body.md)" > /dev/null
+          echo "comment posted"
